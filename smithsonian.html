@@ -1,0 +1,380 @@
+<html>
+
+<style>
+  input[type="checkbox"], input[type="radio"] {
+    min-height: 25px;
+    min-width:25px;
+  }
+  #image-effects, #mapping-options {
+    font-size:18px;
+  }
+  #editor {
+    width: 350px;
+  }
+  #editor canvas {
+    -webkit-transform: scale(0.62, 0.62);
+  }
+  #canvas-container {
+    width: 317px;
+    height: 317px;
+  }
+  #main-design {
+    margin-left: 40px;
+  }
+  #drag-image {
+    display: block;
+    margin-bottom: 20px;
+  }
+  .texture-option {
+    width: 75px;
+    height: 75px;
+    padding: 4px;
+    border: 1px solid white;
+  }
+  .selected-texture {
+    border: 1px solid black;
+  }
+  .texture-option:hover{
+    background: transparent;
+  }
+  #smithsonian #edit-column, #smithsonian #style-column {
+    height: 940px;
+  }
+  #smithsonian #style-picker {
+    width: 315px;
+  }
+  #smithsonian #style-picker .style {
+    height: 194px;
+    margin-right:20px;
+  }
+  #smithsonian #style-picker .style img{
+    padding: 10px;
+  }
+</style>
+
+
+  <script type="text/javascript" src='lib/Three.js'> </script>
+
+
+  <script type="text/javascript">
+    var front_mesh, back_mesh;
+
+    var edit_dx=0, edit_dy=0, edit_x=0, edit_y=0, edit_px=0, edit_py=0;
+    var front_x=0, front_y=0, back_x=0, back_y=0;
+    var offset_val = <%= @garment.offset %>;
+    var mapping_alt = false;
+    var template = false;
+    var map_folder;
+    var custom = true;
+	  var bottom = false;
+
+    var style_id, texture_id, size, design_id, garment_folder;
+    style_id = <%= @garment.id %>;
+    garment_folder = '<%= @garment.folder_name %>';
+
+    var file_path = "Garments/";
+    var url = window.location;
+    url = url.toString();
+    console.log (url);
+
+    var garment_pieces = new Array();
+    var garment_parts = new Array();
+
+    var texture_file;
+    var front_image = new Image();
+    front_image.crossOrigin = "Anonymous";
+    var front_ctx, back_ctx, flipped_ctx;
+    var front_canvas, back_canvas, flipped_canvas;
+    var image_canvas, image_ctx;
+    var filter_canvas, filter_ctx, imgData;
+    var save_available = false;
+    var design_saved = false;
+
+    renderw = 600;
+    renderh = 1000;
+
+    function changeTexture(img){
+    	front_image.src = img;
+
+    	front_x = 0;
+      front_y = 0;
+      back_x = 0;
+      back_y = 0;
+    }
+
+    function update_texture(file) {
+      design_saved = false;
+
+      changeTexture(file);
+      $('#design-texture').val(texture_id);
+      show_save_button();
+    }
+
+
+    $(function() {
+      image_canvas = document.getElementById("image-holder");
+      image_ctx = image_canvas.getContext('2d');
+      front_canvas = document.getElementById('front-texture');
+      front_ctx = front_canvas.getContext('2d');
+      flipped_canvas = document.getElementById("flipped-front");
+      flipped_ctx = flipped_canvas.getContext('2d');
+      back_canvas = document.getElementById('back-texture');
+      back_ctx = back_canvas.getContext('2d');
+      filter_canvas = document.getElementById('filtered');
+      filter_ctx = filter_canvas.getContext('2d');
+
+      edit_dx = getPositionLeft(front_canvas) - 5;
+  		edit_dy = getPositionTop(front_canvas) - 5;
+
+      $(".new-constrvct").addClass('active');
+
+      $("#texture_image").on('change', function() {
+        if ($("#texture_image").val() != "") {
+          $('#new_texture span').html($("#texture_image").val());
+          console.log('uploading texture');
+          $("#loading").show();
+
+          $('#new_texture').submit();
+        } else {
+          $('#new_texture span').html('Use your own photo or image');
+        }
+      });
+
+      $('.grid-design-group').first().css('margin-left', '242px');
+      //$('#style-'+style_id+ ' img').addClass('selected');
+      $('#selected-style').attr('src', $('#style-'+style_id+ ' img').attr('src'));
+
+
+      $($('.texture-option')[0]).addClass('selected-texture');
+      texture_file = $($('.texture-option')[0]).data('img');
+      texture_id = $($('.texture-option')[0]).data('texture-id');
+      $("#selected-texture").attr('src', $($('.texture-option')[0]).attr('src'));
+
+      $('.size-box').first().click();
+
+    if (hasWebGL() == false) {
+      $("#design-ui").hide();
+      $("#getWebGL").show();
+    } else {
+
+      garment_pieces.push("<%= @garment.file_360 %>");
+      init3DBuild(garment_pieces, '');
+
+
+      setTimeout(function() {
+          $(".style img")[0].click();
+          changeTexture(texture_file);
+      },10);
+
+      $("#render-container").css('height', renderh);
+    	$("#render-container").css('width', renderw);
+    	$("#main-design").css('width', renderw);
+
+      front_image.onload = function() {
+        fillWhite(front_canvas);
+        fillWhite(flipped_canvas);
+        fillWhite(back_canvas);
+
+        image_canvas.width = front_image.width;
+        image_canvas.height = front_image.height;
+        image_ctx.scale(1,-1);
+        image_ctx.translate( -front_image.width,0);
+        image_ctx.drawImage(front_image, -front_image.width, front_image.height);
+
+        filter_canvas.width = front_image.width;
+        filter_canvas.height = front_image.height;
+
+        //pixelate(front_image, imgData, filter_ctx, 1);
+
+        filter_ctx.drawImage(front_image, 0,0);
+        front_ctx.drawImage(filter_canvas, front_x,front_y);
+
+        flipped_ctx.translate(flipped_canvas.width,0);
+        flipped_ctx.scale(-1,1);
+        flipped_ctx.drawImage(front_canvas,0,0);
+        flipped_ctx.translate(flipped_canvas.width,0);
+        flipped_ctx.scale(-1,1);
+        if_mirror();
+
+        back_ctx.drawImage(filter_canvas, back_x,back_y);
+
+       if (template)  {
+        useTemplate(front_image.src);
+        } else {
+        loadModelCanvas(garment, front_canvas);
+       }
+
+        imgData = image_ctx.getImageData(0, 0, image_canvas.width, image_canvas.height).data;
+
+        console.log("image load complete");
+
+        setTimeout(function(){
+          $('#edit-button').click();
+           $("#loading").hide();
+        }, 500);
+      }
+
+			  $( "#style-scroll").slider({
+			    orientation: 'vertical',
+    			value:0,
+    			min: -$('#style-picker').height()-200,
+    			max: 0,
+
+    			slide: function(event, ui) {
+    			  $('#style-picker').css('top', ui.value);
+
+    			}
+  			});
+    	}
+      		setTimeout(function() {$("#loading").hide();}, 1000);
+
+    });
+
+    function refreshFront() {
+        front_ctx.clearRect(0,0,front_canvas.width, front_canvas.height);
+        fillWhite(front_canvas);
+        var w = filter_canvas.width;
+        var h = filter_canvas.height;
+        if_center();
+        front_ctx.drawImage(filter_canvas, front_x,front_y);
+        front_ctx.drawImage(filter_canvas, front_x + w,front_y);
+        front_ctx.drawImage(filter_canvas, front_x + w,front_y+h);
+
+        front_ctx.drawImage(filter_canvas, front_x-w,front_y);
+        front_ctx.drawImage(filter_canvas, front_x-w,front_y-h);
+
+        front_ctx.drawImage(filter_canvas, front_x,front_y+h);
+        front_ctx.drawImage(filter_canvas, front_x-w,front_y+h);
+
+        front_ctx.drawImage(filter_canvas, front_x,front_y-h);
+        front_ctx.drawImage(filter_canvas, front_x+w,front_y-h);
+
+        flipped_ctx.clearRect(0,0,flipped_canvas.width, flipped_canvas.height);
+        fillWhite(flipped_canvas);
+
+        flipped_ctx.translate(flipped_canvas.width,0);
+        flipped_ctx.scale(-1,1);
+        flipped_ctx.drawImage(front_canvas,0,0);
+        flipped_ctx.translate(flipped_canvas.width,0);
+        flipped_ctx.scale(-1,1);
+
+        if_mirror();
+
+    }
+
+    function refreshBack(){
+      back_ctx.clearRect(0,0,back_canvas.width, back_canvas.height);
+  		fillWhite(back_canvas);
+  		back_ctx.drawImage(filter_canvas, back_x,back_y);
+  		//loadModelCanvas(back, back_canvas);
+    }
+
+    function fillWhite(canvas) {
+      var ctx = canvas.getContext('2d');
+      ctx.beginPath();
+  		ctx.rect(0,0, canvas.width, canvas.height);
+  		ctx.fillStyle = 'white';
+      ctx.fill();
+    }
+
+
+    function mirror(canvas, fcanvas, ctx, pixel){     ctx.drawImage(fcanvas,fcanvas.width/2,0,fcanvas.width/2,fcanvas.height,canvas.width/2,0,canvas.width/2,canvas.height);
+
+    }
+
+
+  </script>
+
+<div style="width:0px;" id="my-closet">
+</div>
+
+<div id="design-ui" style="width: 1472px; height: 940px;">
+
+  <div id="main-design">
+    <div id="render-container">
+    </div>
+    <div id="loading">
+      <strong>WORKING</strong>
+    <span></span>
+    </div>
+
+  </div>
+
+<div id="edit-column" class="column" style="width: 360px; padding: 0px 15px;">
+  <div id="editor">
+
+    <div id="canvas-container">
+      <canvas id="front-texture" width=512 height=512></canvas>
+      <canvas id="back-texture" width=512 height=512></canvas>
+    </div>
+    <span id="drag-image">drag to position image</span>
+
+    <div id="mapping-options" class="block-half">
+      <span><input type="radio" name="mapping" value="seamless" id="seamless" checked/>360 wrap</span><br>
+      <span><input type="radio" name="mapping" value="frontback" id="frontback"/>front & back</span>
+      <span style="display:none;"><input type="radio" name="mapping" value="flat" id="flat" />Use Template</span>
+    </div>
+
+    <div id="image-effects" class="block-half">
+    <input type="checkbox" name="filter" id="center-image" value="center" />center image <br>
+    <input type="checkbox" name="filter" value="mirror" id="mirror-image"/>mirror effect
+    </div>
+
+  </div>
+
+  <div id="artwork">
+    <%= form_for Texture.new, :remote => true, :id => 'texture-upload' do |f| %>
+        <%= f.file_field :image, :style => 'display:none' %>
+        <br />
+        <!--
+        <a class="button" id="upload-image-button" style="display:none;"> Upload Image </a>
+        -->
+      <% end %>
+
+      <div id="available-artwork">
+        <h3 class="section-heading" >Select An Image</h3>
+        <div class="texture-picker">
+          <% if @textures %>
+            <% @textures.each do |texture| %>
+              <%= eager_image_tag texture.image.url(:thumb), :'data-texture-id' => texture.id, :'data-img' => texture.image.url(:v512), :class=>"texture-option" %>
+          <% end %>
+          <% else %>
+            <p><a class="button" onclick="showSignup()"> Create an account</a><br /> Upload your own images.</p>
+          <% end %>
+          </div>
+
+
+      </div>
+  </div>
+
+</div>
+
+<div class="column" style="left:0px;border-left:0px;">
+
+  <div id="style-picker" style="height:900px;">
+
+    <% @garments.each do |style| %>
+      <div class="style" id='style-<%=style.id %>'>
+        <%= eager_image_tag style.icon.url(:icon100), :'data-garment-id' => style.id, :'data-gender' => style.gender, :'data-price' => style.price, :'data-sale' => style.on_sale, :'data-sale-price' => style.sale_price, :'data-material' => style.material.name, :'data-lead-time' => style.lead_time, :'data-description'=> style.description, :'data-folder'=> style.folder_name,  :'data-forsale'=>style.for_sale , :'data-custom'=>style.custom_sizing , :'data-bottom'=>style.bottom_sizing ,  :'data-offset' => style.offset , :'data-mapping-alt' => style.file_fb, :'data-file_360' => style.file_360 , :'data-mapping-flat' => style.file_flat %>
+        <!--
+        <div class="hover-info">
+          <div class="rarrow-outline"></div>
+          <div class="rarrow"></div>
+          <p><%= style.description %></p>
+        </div>
+      -->
+      </div>
+    <% end %>
+  </div>
+
+</div>
+
+
+  <canvas id="image-holder" style="display:none;"> </canvas>
+  <canvas id="filtered" width=512 height=512 style="display:none;"></canvas>
+  <canvas id="flipped-front" width=512 height=512 style="display:none;"></canvas>
+</div>
+
+</div>
+</div>
+</html>

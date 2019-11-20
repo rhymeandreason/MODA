@@ -1,0 +1,536 @@
+<html>
+<head>
+	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+	<meta content="utf-8" http-equiv="encoding">
+
+	<link href="https://fonts.googleapis.com/css?family=Lato:300,400&display=swap" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+	<script src="lib/Three.js"></script>
+	<script src="constrvct_main.js"></script>
+	<script src="images.js"></script>
+</head>
+
+<style>
+body {
+	font-family: 'Lato', sans-serif;
+	font-weight: lighter;
+}
+.variations {
+	position: absolute;
+	left: 600px;
+	top: 0px;
+	display: block;
+	width: 400px;
+}
+
+/* HIDE RADIO */
+.ui-select {
+	position: relative;
+	width: 80px;
+	height:80px;
+	overflow: visible;
+	//margin: 0px 15px 15px 0px;
+	margin: 7.5px;
+	float: left;
+}
+.ui-select [type=radio] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+#image-select .ui-select {
+	width: 50px;
+	height: 50px;
+	margin: 5px;
+}
+
+/* IMAGE STYLES */
+.ui-select [type=radio] + img {
+  cursor: pointer;
+	width:72px;
+	border-radius: 3px;
+//	opacity: .85;
+	position: relative;
+	top: 0px;
+	left: 0px;
+
+}
+
+.ui-select [type=radio] + img:hover {
+	box-shadow: 0 0 0 1pt #ECE9E5;
+	//box-shadow: 0 0 0 4pt white;
+
+	transition: width .06s, box-shadow .1s, margin-top .06s, margin-left .06s, border-radius .06s;
+
+}
+#style-options .ui-select [type=radio] + img:hover {
+	width:76px;
+	border-radius: 4pt;
+	margin-top: -2px;
+	margin-left: -2px;
+}
+
+#image-select .ui-select [type=radio] + img {
+  cursor: pointer;
+	border: none;
+	width:100%;
+}
+
+#image-select .ui-select [type=radio] + img:hover{
+	width:54px;
+	border-radius: 4pt;
+	margin-top: -2px;
+	margin-left: -2px;
+}
+
+/* CHECKED STYLES */
+.ui-select [type=radio]:checked + img {
+	box-shadow: 0 0 0 3pt #D8D7D7;
+	opacity:1;
+	transition: box-shadow .2s;
+}
+
+.ui-select-group {
+	width: 190px;
+	//margin: 30px;
+	display: inline-block;
+//	float: left;
+}
+.ui-select-group h3, .ui-group h3{
+	font-weight: lighter;
+	font-size: 16px;
+	margin-top: 0px;
+	margin-bottom: 10px;
+	text-align: left;
+}
+#style-options h3{
+	padding-left: 7.5px;
+}
+
+.slider-container, .checkbox-container {
+	width: 230px;
+	position: relative;
+	margin: auto;
+	margin-bottom: 30px;
+	display: inline-block;
+}
+.slider-container label{
+	float: left;
+}
+.slider-container .val{
+	float: right;
+}
+
+input:focus {
+    outline-width: 0;
+}
+
+[type=range] {
+	width: 100%;
+	float: left;
+	margin: 0px;
+	display: inline-block;
+	cursor: hand;
+}
+
+#style-options {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 210px;
+	height: 100%;
+	background-color: #F4F5F7;
+	border-right: 1px solid #E0E0E0;
+	text-align: center;
+}
+#image-select {
+	width: 240px;
+}
+#print-options {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 270px;
+	height: 100%;
+	background-color: #F4F5F7;
+	border-left: 1px solid #E0E0E0;
+	text-align: center;
+	z-index: 2;
+}
+#neckline-select, #uv-options {
+	margin-top: 25px;
+	margin-bottom: 30px;
+}
+#neckline-select {
+
+}
+
+.ui-number {
+	position: relative;
+	float: left;
+	margin: 0px 5px 20px 5px;
+	display: inline-block;
+	border: 1px solid #E0E0E0;
+	border-radius: 2px;
+}
+
+.ui-number label{
+	position: absolute;
+	left: 7px;
+	top: 3px;
+	opacity: .4;
+}
+
+.ui-number input{
+	padding: 4px 5px 4px 20px;
+	font-size: 16px;
+	font-weight: lighter;
+	width: 108px;
+	text-align: right;
+	float: left;
+  border: none;
+  background: transparent;
+}
+
+.ui-number:hover {
+	background-color: white;
+}
+
+.left {
+	margin-left: 0px;
+	float: left;
+}
+.right {
+	margin-right: 0px;
+	float: right;
+}
+
+#uv-position {
+	display: inline-block;
+	width: 230px;
+	margin: auto;
+}
+
+#render-container {
+	position: absolute;
+	left: 210px;
+	width: 600px;
+	text-align: center;
+}
+#render-container canvas {
+	margin: auto auto;
+	margin-top: 30px;
+}
+
+#tools{
+	position: absolute;
+	top: 0px;
+	right: 10px;
+	z-index:1;
+}
+
+#tools .ui-select-group{
+	margin: 0px;
+	width: inherit;
+}
+
+#tools .ui-select {
+	width: 52px;
+	height: 52px;
+	background-color: white;
+	border-radius: 10px;
+	margin-top: 0px;
+
+}
+#tools .ui-select img {
+	width: 36px;
+	height: 36px;
+	padding: 7px;
+	border-radius: 10px;
+	opacity: .3;
+	box-shadow: none;
+	border: 2px solid black;
+}
+#tools .ui-select [type=radio]:checked + img {
+	opacity: 1;
+}
+
+</style>
+
+<script>
+
+var garment = new THREE.Object3D(), neckline = new THREE.Object3D(), sleeves = new THREE.Object3D(), skirt = new THREE.Object3D();
+var pocket = new THREE.Object3D();
+var belt = new THREE.Object3D();
+var pocketOption = false;
+var necklineOptions, sleeveOptions, skirtOptions;
+var tool = "rotate";
+
+necklineOptions = [ "round_neck", "v_neck", "boat_neck", "slit_neck" ];
+sleeveOptions = [ "", "three_quarter_sleeves", "long_sleeves" ];
+skirtOptions = [ "skirt_1", "skirt_2", "skirt_3", "long_skirt" ];
+
+var imgFile = "images/landscapes/anchorage.jpg";
+imgFile = "images/"+images[0];
+
+
+function getFile(name) {
+	var url="Circle_Dress/";
+	return url+ name + ".js";
+}
+
+$( document ).ready(function() {
+	setWidth();
+  init3DBuild(getFile(necklineOptions[getNeckline()]) , getFile(sleeveOptions[0]) , getFile(skirtOptions[getSkirt()]) , imgFile);
+	getImages();
+
+  var necklineSelect = $("input[name=attribute_neckline]");
+  $("input[name=attribute_neckline]:radio").change(function () {
+  	var selectedIndex = necklineSelect.index(necklineSelect.filter(':checked'));
+  	refreshNeckline(selectedIndex);
+  });
+
+  var sleevesSelect = $("input[name=attribute_sleeves]");
+  $("input[name=attribute_sleeves]:radio").change(function () {
+  	var selectedIndex = sleevesSelect.index(sleevesSelect.filter(':checked'));
+  	refreshSleeves(selectedIndex);
+  });
+
+  var skirtSelect = $("input[name=attribute_skirt]");
+  $("input[name=attribute_skirt]:radio").change(function () {
+  	var selectedIndex = skirtSelect.index(skirtSelect.filter(':checked'));
+  	refreshSkirt(selectedIndex);
+  });
+
+  var imageSelect = $("input[name=attribute_image]");
+  $("input[name=attribute_image]:radio").change(function() {
+    var img = $(this).val();
+    console.log(img);
+  	updateFabric(img);
+  });
+
+	$("input[name=attribute_tool]")[0].checked = true;
+	var toolSelect = $("input[name=attribute_tool]");
+	$("input[name=attribute_tool]:radio").change(function() {
+		tool = $("input[name=attribute_tool]:checked").val();
+		console.log(tool);
+	});
+
+/*
+	$("#uv-repeat").val(1);
+	$("#uv-repeat").on('input', function(){
+		//console.log ($("#uv-repeat").val());
+		texture.repeat.x = $("#uv-repeat").val();
+		texture.repeat.y = -$("#uv-repeat").val();
+	});
+*/
+$("#uv-size").val(100);
+$("#uv-size").on('input', function(){
+	var percent = $("#uv-size").val();
+	var n = 100/percent;
+	console.log(n);
+	texture.repeat.x = n;
+	texture.repeat.y = -n;
+
+	$("#uv-size-val").html(percent+"%");
+});
+
+	$('#uv-x').change(function(e) {
+	  if (e.originalEvent) {
+		//	console.log("user triggered");
+			texture.offset.x = Num_to_UV($(this).val());
+	  }
+	  else {
+	    // code-triggered event
+			console.log("other event");
+	  }
+	});
+
+	$('#uv-y').change(function(e) {
+		if (e.originalEvent) {
+		//	console.log("user triggered");
+			texture.offset.y = Num_to_UV($(this).val());
+		}
+		else {
+			// code-triggered event
+			console.log("other event");
+		}
+	});
+
+	$("#mirror-toggle").change(function() {
+
+	});
+
+});
+
+
+$( window ).resize(function() {
+	setWidth();
+});
+
+function resetUI(){
+	$("#uv-size").val(100);
+}
+
+function setWidth(){
+	var center_width = document.body.clientWidth - $("#style-options").width() - $("#print-options").width();
+	$("#render-container").width(center_width);
+}
+
+function setPosValues(x,y) {
+	$("#uv-x").val(UV_to_Num(x));
+	$("#uv-y").val(UV_to_Num(y));
+}
+
+function UV_to_Num(n){
+	var num = n*100;
+	return num.toFixed(1);
+}
+function Num_to_UV(n){
+	var num =  n/100;
+	return num;
+}
+
+function getNeckline(){
+	var necklineSelect = $("input[name=attribute_neckline]");
+	var index = necklineSelect.index(necklineSelect.filter(':checked'));
+	console.log(index);
+	return index;
+};
+function getSkirt(){
+	var skirtSelect = $("input[name=attribute_skirt]");
+	var index = skirtSelect.index(skirtSelect.filter(':checked'));
+	return index;
+};
+
+function getImages(){
+	for (var i=0; i<images.length; i++){
+		var url = images[i];
+		var item = $('<label class="ui-select"></label>');
+		//item.className ="ui-select";
+		var radio = $('<input type="radio" value="images/'+url+'" name="attribute_image" class="image-radio">');
+		var thumb = $('<img src="images/thumbnails/'+url+'" />');
+		item.append(radio);
+		item.append(thumb);
+
+		$("#image-select").append(item);
+	}
+	$(".image-radio")[0].checked=true;
+}
+
+
+</script>
+
+
+<body>
+	<div id="render-container">
+
+		<div id="tools">
+			<div class="ui-select-group">
+				<label class="ui-select">
+					<input type="radio" value="rotate" name="attribute_tool" checked>
+					<img src="ui/rotate-24px.svg" />
+				</label>
+				<label class="ui-select">
+					<input type="radio" value="move" name="attribute_tool" >
+					<img src="ui/move-24px.svg" />
+				</label>
+			</div>
+		</div>
+
+	</div>
+
+
+	<div id="style-options">
+		<div class="ui-select-group" id="neckline-select">
+			<h3> Neckline </h3>
+			<label class="ui-select">
+	    	<input type="radio" class=" " value="round_neck" id="attribute_neckline_v-neck" name="attribute_neckline" checked>
+				<img src="ui/neckline1.png" />
+			</label>
+			<label class="ui-select">
+				<input type="radio" class=" " value="boat_neck" id="attribute_neckline_scoop" name="attribute_neckline">
+				<img src="ui/neckline2.png" />
+			</label>
+			<label class="ui-select">
+				<input type="radio" class=" " value="v_neck" id="attribute_neckline_scoop" name="attribute_neckline">
+				<img src="ui/neckline3.png" />
+			</label>
+			<label class="ui-select">
+				<input type="radio" class=" " value="slit_neck" id="attribute_neckline_scoop" name="attribute_neckline">
+				<img src="ui/neckline4.png" />
+			</label>
+		</div>
+
+<!--
+        	<input id="Short Sleeve" type="radio" class=" " value="short-sleeve" name="attribute_sleeves">Short Sleeves<br>
+        	<input id="Short Sleeve" type="radio" class=" "  name="attribute_sleeves">3/4 sleeves<br>
+        	<input id="Short Sleeve" type="radio" class=" "  name="attribute_sleeves">long sleeves<br>
+-->
+
+		<div class="ui-select-group" id="skirt_length_select">
+			<h3> Skirt Length </h3>
+				<label class="ui-select">
+        	<input id="" type="radio" class=" " value="skirt_1" name="attribute_skirt" checked>
+					<img src="ui/skirt1.png" />
+				</label>
+
+				<label class="ui-select">
+					<input id="" type="radio" class=" " value="skirt_2" name="attribute_skirt">
+					<img src="ui/skirt2.png" />
+				</label>
+
+				<label class="ui-select">
+					<input id="" type="radio" class=" " value="skirt_3" name="attribute_skirt">
+					<img src="ui/skirt3.png" />
+				</label>
+
+				<label class="ui-select">
+					<input id="" type="radio" class=" " value="long_skirt" name="attribute_skirt">
+					<img src="ui/skirt4.png" />
+				</label>
+
+		</div>
+
+	</div>
+
+	<div id="print-options">
+		<div id="uv-options" class="ui-group">
+			<div id="uv-position">
+				<h3> Position </h3>
+				<span class="ui-number left">
+					<label> X </label>
+					<input id="uv-x" type="number" value="0" step=".1">
+				</span>
+				<span class="ui-number right">
+					<label> Y </label>
+					<input id="uv-y" type="number" value="0" step=".1">
+				</span>
+			</div>
+
+			<div class="slider-container" id="uv-size-select">
+				<label> Size </label>
+				<span class="val" id="uv-size-val">100%</span>
+				<!--
+				<input type="range" min=".3" max="10" value="1" step=".1" class="slider" id="uv-repeat">
+				-->
+				<input type="range" min="5" max="200" value="100" step="5" class="slider" id="uv-size">
+			</div>
+<!--
+		<div class="checkbox-container">
+			<input type="checkbox" id="mirror-toggle">
+			<label>Mirror</label>
+		</div>
+		-->
+
+		<div class="ui-select-group" id="image-select">
+		</div>
+
+		</div>
+	</div>
+
+</body>
+</html>
